@@ -9,6 +9,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
     <ToastContainer
+      className="Toastify__toast-body"
       position="top-left"
       autoClose={5000}
       hideProgressBar={false}
