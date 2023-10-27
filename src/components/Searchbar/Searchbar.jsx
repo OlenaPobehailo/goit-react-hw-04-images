@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BsSearch } from 'react-icons/bs';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 
 import { StyledSearchbar } from './Searchbar.styled';
 
@@ -14,7 +15,7 @@ const Searchbar = ({ setQuery }) => {
   const handleSubmit = e => {
     e.preventDefault();
     if (searchStr.trim() === '') {
-      return alert('Please enter search query');
+      toast.warn('Please enter search query');
     }
     setQuery(searchStr);
     setSearchStr('');

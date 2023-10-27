@@ -6,6 +6,7 @@ import Searchbar from 'components/Searchbar';
 import Modal from 'components/Modal';
 import Loader from 'components/Loader';
 import { fetchImages } from 'services/api';
+import { toast } from 'react-toastify';
 
 const ImageGalleryPage = () => {
   const [images, setImages] = useState([]);
@@ -33,8 +34,8 @@ const ImageGalleryPage = () => {
         });
 
         if (!totalHits) {
-          return alert(
-            `There are no images found with the search request ${query}`
+          toast.info(
+            `There are no images found with the search request "${query}"`
           );
         }
 
@@ -56,7 +57,7 @@ const ImageGalleryPage = () => {
     setPage(prev => prev + 1);
   };
 
-  const handleSetQuery = ( query ) => {
+  const handleSetQuery = query => {
     setQuery(query);
     setPage(1);
     setImages([]);
