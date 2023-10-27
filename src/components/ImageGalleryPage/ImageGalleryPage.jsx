@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 
 import ImageGallery from 'components/ImageGallery';
 import Button from 'components/Button';
@@ -7,23 +7,22 @@ import Modal from 'components/Modal';
 import Loader from 'components/Loader';
 import { fetchImages } from 'services/api';
 
-class ImageGalleryPage extends Component {
-  state = {
-    images: [],
-    page: 1,
-    query: '',
-    totalHits: null,
-    loading: false,
-    error: null,
-    isModalOpen: false,
-    modalData: null,
-  };
+const ImageGalleryPage = () => {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [totalHits, setTotalHits] = useState(null);
+  const [loading, setLoading] = useState('');
+  const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
 
-  async componentDidUpdate(prevProps, prevState) {
-    const { page, query } = this.state;
-
-    if (prevState.page !== page || prevState.query !== query) {
-      this.setState({ loading: true });
+  useEffect(() => {
+    const fetchData = async () => {
+      if (page === 1) {
+        setImages([]);
+      }
+      setLoading(true);
       try {
         const { hits, totalHits } = await fetchImages({
           per_page: 12,
@@ -34,60 +33,63 @@ class ImageGalleryPage extends Component {
         });
 
         if (!totalHits) {
-          return alert(`There is no images found with search request ${query}`);
+          return alert(
+            `There are no images found with the search request ${query}`
+          );
         }
 
-        this.setState(prevState => ({
-          images: [...prevState.images, ...hits],
-          totalHits,
-        }));
+        setImages(prevImages => [...prevImages, ...hits]);
+        setTotalHits(totalHits);
       } catch (error) {
-        this.setState({ error: error.message });
+        setError(error.message);
       } finally {
-        this.setState({ loading: false });
+        setLoading(false);
       }
+    };
+
+    if (page !== 1 || query !== '') {
+      fetchData();
     }
-  }
+  }, [page, query]);
 
-  handleLoadMore = () => {
-    this.setState(prev => ({ page: prev.page + 1 }));
+  const handleLoadMore = () => {
+    setPage(prev => prev + 1);
   };
 
-  handleSetQuery = ({ query }) => {
-    this.setState({ query, images: [], page: 1 });
+  const handleSetQuery = ( query ) => {
+    setQuery(query);
+    setPage(1);
+    setImages([]);
   };
 
-  toggleModal = modalData => {
-    this.setState(prev => ({ isModalOpen: !prev.isModalOpen, modalData }));
+  const toggleModal = modalData => {
+    setIsModalOpen(prev => !prev);
+    setModalData(modalData);
   };
 
-  render() {
-    const { images, totalHits, isModalOpen, modalData, loading } = this.state;
+  return (
+    <>
+      <Searchbar setQuery={handleSetQuery} />
+      <h2>{error}</h2>
+      {loading && !images.length ? (
+        <Loader />
+      ) : (
+        <ImageGallery images={images} toggleModal={toggleModal} />
+      )}
 
-    return (
-      <>
-        <Searchbar setQuery={this.handleSetQuery} />
-        <h2>{this.state.error}</h2>
-        {loading && !images.length ? (
-          <Loader />
-        ) : (
-          <ImageGallery images={images} toggleModal={this.toggleModal} />
-        )}
+      {totalHits > images.length ? (
+        <Button onClick={handleLoadMore}>
+          {loading ? 'Loading...' : 'Load more'}
+        </Button>
+      ) : null}
 
-        {totalHits > images.length ? (
-          <Button onClick={this.handleLoadMore}>
-            {loading ? 'Loading...' : 'Load more'}
-          </Button>
-        ) : null}
-
-        {isModalOpen ? (
-          <Modal onClose={this.toggleModal}>
-            <img src={modalData.largeImageURL} alt={modalData.tags} />
-          </Modal>
-        ) : null}
-      </>
-    );
-  }
-}
+      {isModalOpen ? (
+        <Modal onClose={toggleModal}>
+          <img src={modalData.largeImageURL} alt={modalData.tags} />
+        </Modal>
+      ) : null}
+    </>
+  );
+};
 
 export default ImageGalleryPage;
